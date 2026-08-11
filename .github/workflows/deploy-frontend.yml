@@ -1,0 +1,115 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'frontend/**'
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: '部署目标平台'
+        required: true
+        type: choice
+        options:
+          - github-pages
+          - vercel
+          - both
+        default: 'github-pages'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist
+
+  deploy-github-pages:
+    if: >-
+      github.event_name == 'workflow_dispatch' && 
+      (github.event.inputs.deploy_target == 'github-pages' || 
+       github.event.inputs.deploy_target == 'both') ||
+      (github.event_name == 'push' && 
+       (github.repository_owner == 'your-username' || 
+        vars.DEPLOY_TARGET == 'github-pages' || 
+        vars.DEPLOY_TARGET == 'both'))
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  deploy-vercel:
+    if: >-
+      github.event_name == 'workflow_dispatch' && 
+      (github.event.inputs.deploy_target == 'vercel' || 
+       github.event.inputs.deploy_target == 'both') ||
+      (github.event_name == 'push' && 
+       vars.DEPLOY_TARGET == 'vercel' || 
+       vars.DEPLOY_TARGET == 'both')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./frontend
+          vercel-args: '--prod'
+          vercel-project-name: ${{ vars.VERCEL_PROJECT_NAME || 'aiagent-frontend' }}
