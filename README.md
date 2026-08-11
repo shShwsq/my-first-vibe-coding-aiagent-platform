@@ -1,4 +1,4 @@
-# shwsq'aiagent 智能体平台
+# my first vibe coding aiagent platform
 
 **Version: 1.0.0**
 
@@ -283,51 +283,6 @@ npm run build
                     → 后端 API (8000) → PostgreSQL
 ```
 
-## 常见问题
-
-### 后端无法连接数据库
-
-- 检查数据库连接字符串是否正确
-- 确认数据库服务已启动
-- 检查防火墙和白名单配置
-
-### 前端无法调用 API
-
-- 检查 `VITE_API_BASE_URL` 配置
-- 确认后端 CORS 配置包含前端域名
-- 查看浏览器开发者工具的网络请求
-
-### Docker 构建失败
-
-```bash
-# 清理缓存重新构建
-docker compose build --no-cache
-
-# 查看构建日志
-docker compose build 2>&1 | tee build.log
-```
-
 ## 许可证
 
 本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。
-
-## 更新日志
-
-### V1.0.0 (2026-04-30)
-
-- 初始版本发布
-- 支持智能体管理（HTTP 智能体和工作流智能体）
-- 工作流引擎（节点编排、代码执行、流程控制）
-- 代码工具系统（数据处理、图表生成、文件导出）
-- 知识库系统（RAG 检索、多格式文档支持）
-- 测试用例管理与执行
-- 实时对话界面（支持流式输出）
-- API 配置管理
-- 用户认证系统
-- Docker 容器化部署
-- GitHub Actions CI/CD
-- 前端部署支持（GitHub Pages / Vercel）
-
-## 联系方式
-
-如有问题或建议，请提交 Issue 或联系项目维护者。
